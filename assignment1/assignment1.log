@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.12.20)  15 AUG 2018 11:46
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2017.12.20)  15 AUG 2018 11:56
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -631,14 +631,14 @@ LaTeX Font Info:    Try loading font information for TS1+cmr on input line 283.
  (/usr/local/texlive/2017/texmf-dist/tex/latex/base/ts1cmr.fd
 File: ts1cmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 ) [7]
-<atlas/chart23resid.pdf, id=147, 568.1225pt x 284.06125pt>
+<atlas/chart23resid.pdf, id=150, 568.1225pt x 284.06125pt>
 File: atlas/chart23resid.pdf Graphic file (type pdf)
 
 <use atlas/chart23resid.pdf>
 Package pdftex.def Info: atlas/chart23resid.pdf used on input line 304.
 (pdftex.def)             Requested size: 450.43253pt x 225.22511pt.
 
-<atlas/chart23correl.pdf, id=148, 568.1225pt x 284.06125pt>
+<atlas/chart23correl.pdf, id=151, 568.1225pt x 284.06125pt>
 File: atlas/chart23correl.pdf Graphic file (type pdf)
 
 <use atlas/chart23correl.pdf>
@@ -660,11 +660,11 @@ LaTeX Warning: There were multiply-defined labels.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 367.
  ) 
 Here is how much of TeX's memory you used:
- 9824 strings out of 492995
- 146074 string characters out of 6132703
+ 9826 strings out of 492995
+ 146093 string characters out of 6132703
  252889 words of memory out of 5000000
- 13221 multiletter control sequences out of 15000+600000
- 10224 words of font info for 37 fonts, out of 8000000 for 9000
+ 13222 multiletter control sequences out of 15000+600000
+ 10392 words of font info for 38 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  37i,16n,38p,930b,419s stack positions out of 5000i,500n,10000p,200000b,80000s
 pdfTeX warning (dest): name{Hfootnote.10} has been referenced but does not ex
@@ -717,11 +717,12 @@ f-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2017/texmf-
 dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/2017/texmf-d
 ist/fonts/type1/public/amsfonts/cm/cmti8.pfb></usr/local/texlive/2017/texmf-dis
 t/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/2017/texmf-dist
-/fonts/type1/public/cm-super/sfrm1000.pfb>
-Output written on assignment1.pdf (10 pages, 326025 bytes).
+/fonts/type1/public/amsfonts/cm/cmtt8.pfb></usr/local/texlive/2017/texmf-dist/f
+onts/type1/public/cm-super/sfrm1000.pfb>
+Output written on assignment1.pdf (10 pages, 332147 bytes).
 PDF statistics:
- 259 PDF objects out of 1000 (max. 8388607)
- 214 compressed objects within 3 object streams
+ 265 PDF objects out of 1000 (max. 8388607)
+ 219 compressed objects within 3 object streams
  39 named destinations out of 1000 (max. 500000)
  114 words of extra memory for PDF output out of 10000 (max. 10000000)
 

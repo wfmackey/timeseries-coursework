@@ -63,7 +63,7 @@
   library(forecast)  # Nicely plot residuals and conduct ACF/PACF tests
 
   # Set working directory
-  setwd("~/Google Drive/UniMelb/2018_2/timeseries_30004/assignment1")
+  setwd("~/Google Drive/UniMelb/2018_2/timeseries_30004/code/assignment1")
   
   # Set some nice colours
   col1 <- "#873B70"
@@ -345,7 +345,7 @@ data.dow <- data %>%
 \newpage
 \subsection{} \label{subsec23} %% Question 2.3
 
-  Model \label{eq22} was estimated in \texttt{R}, and its results are presented in Table 1.\footnote{Full, reproducable code for this assignment is presented at  (only made public after the due date) }
+  Model \label{eq22} was estimated in \texttt{R}, and its results are presented in Table 1.\footnote{Full, reproducable code for this assignment can be found at  \url{www.github.com/wfmackey/timeseries-coursework/tree/master/assignment1} (only made public after the due date).}
 
 <<q22model, echo=FALSE>>=
 reg22a <- lm(lnvol ~ t      +
