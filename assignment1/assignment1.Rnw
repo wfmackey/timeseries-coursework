@@ -1,0 +1,557 @@
+\documentclass{article}
+
+  % Packages
+  %% Setting nice page margins
+  \usepackage{geometry}
+    \geometry{margin=20mm}
+  %% Hyperlink (cross/page) references
+  \usepackage{hyperref}
+  %% Colour
+  \usepackage[dvipsnames]{xcolor}
+      \definecolor{col1}{HTML}{873B70}
+        \definecolor{col1light}{HTML}{d8a6c9}
+      \definecolor{col2}{HTML}{7086BF}
+        \definecolor{col2dark}{HTML}{374a7b}
+  %% Notes below charts
+  \usepackage[capposition=top]{floatrow}
+      \newcommand{\wnote}[1]{\vspace{-5mm} \floatfoot{\centering{\textit{Note: #1}}}}
+  %% Maths
+  \usepackage{amsmath}
+  %% Add code to LaTeX document
+  \usepackage{listings}
+  
+  %% Fix footnote-drift problem
+  \usepackage[bottom]{footmisc}
+
+  %% For title creation
+  \usepackage{blindtext}
+
+ % Changing some defaults for ease-of-readability
+ \setlength{\parindent}{0pt} %% no indent
+ \setlength{\parskip}{5mm}  %% paragraph spacing
+    
+% Define some common phrases for consistency
+  \newcommand{\ie}{\textit{i.e.}}
+  \newcommand{\eg}{\textit{e.g.}}
+
+
+
+\title{Time Series Analysis and Forecasting (ECOM30004): Assignment 1}
+\date{2018\\ August}
+\author{Will Mackey\\ 790114}
+
+
+
+
+
+
+\begin{document}
+\maketitle
+
+
+%% R installation
+<<library, echo=FALSE, include = FALSE>>=
+##opts_chunk$set(echo = FALSE, include = FALSE, results = "hide")
+
+  # Set library
+  library(tidyverse) # for nice data wrangling
+  library(lubridate) # to convert dates nicely
+  library(stargazer) # for (mostly) nice automated regression-output tables
+  library(scales)    # to nicely handle dates in ggplot
+  library(sandwich)  # use Newey-West standard errors
+  library(lmtest)    # use Newey-West standard errors
+  library(forecast)  # Nicely plot residuals and conduct ACF/PACF tests
+
+  # Set working directory
+  setwd("~/Google Drive/UniMelb/2018_2/timeseries_30004/assignment1")
+  
+  # Set some nice colours
+  col1 <- "#873B70"
+    col1light <- "#d8a6c9"
+  col2 <- "#7086BF"
+    col2dark <- "#374a7b"
+  
+  # Turn off scientific notation
+  options(scipen=999)
+
+    
+@
+
+
+\section{Conceptual question}
+
+\subsection{} %%Question 1.1
+    The first structural-break model is:
+        \begin{align*}
+          y_t  &= \alpha_0 + \alpha_1 DI_{t} + U_{1t}    \tag*{where $U_{1t}$ is noise; \textit{(i)}} \\
+          DI_t &=                                      \tag*{where $1< T_B <T$}
+          \begin{cases}
+            0 \text{\quad  if \quad} t \leq T_B \\
+            1 \text{\quad  if \quad} t >    T_B
+          \end{cases}
+        \end{align*}
+    When the structural break occurs for model ($i$), the change in expected output is the post-break expectation $E[y_{t,DI_{t}=1}]$ less the pre-break expectation $E[y_{t,DI_{t}=0}]$, shown below.
+
+    From:
+        \begin{align*}
+          E[y_{t,DI_{t}=0}] &= E[\alpha_0] + E[U_{1t}]    \tag*{where $E[U_{1t}]=0$} \\ 
+                      &= \alpha_0                         \tag*{as $\alpha_0$ is a constant}
+        \end{align*}
+    to:
+        \begin{align*}
+          E[y_{t,DI_{t}=1}] &= E[\alpha_0 + \alpha_1 + U_{1t}]                                 \\ 
+                            &= E[\alpha_0] + E[\alpha_1]   + E[U_{1t}]    \tag*{where $E[U_{1t}]=0$} \\ 
+                            &= \alpha_0  + \alpha_1
+        \end{align*}
+    giving:
+        \begin{align*}
+          E[y_{t,DI_{t}=1}] - E[y_{t,DI_{t}=0}] &= \alpha_1
+        \end{align*}
+    Or, the difference in expected $y_t$ is $\alpha_1$. This shows that model ($i$), which is simulated in Figure \ref{chart11} alongside model ($ii$), could represent a time-invariant variable that changes \textit{levels} due to a shock. For example, productivity growth ($y_t$) of an established industry that experiences a permanent negative shock ($a_1<0$) when a competitor enters the market at time $T_B$.
+
+    \vspace{5mm}
+
+    The second structual-break model is:
+        \begin{align*} 
+        y_t  &= \beta_{0} + \beta_{1} t + \beta_{2} DI_{t} + U_{2t}    \tag*{where $U_{2t}$ is noise, \textit{(ii)}} \\ 
+        DI_t &=                                      \tag*{where $1< T_B <T$}
+        \begin{cases}
+          0 \text{\quad  if \quad}         t \leq T_B \\
+          t - T_{B} \text{\quad  if \quad} t >    T_B
+        \end{cases}
+      \end{align*}
+
+    Similarly, when the structual break occurs, the expected output changes by the post-break expectation $E[y_{t,DT_{t}=t-T_B}]$ less the pre-break expectation $E[y_{t,DT_{t}=0}]$.
+
+    From:
+        \begin{align*}
+          E[y_{t,DT_{t}=0}] &= E[\beta_0 +   \beta_1 t + U_{2t}]    \tag*{where $E[U_{2t}]=0$} \\ 
+                            &= \beta_0 + \beta_1 t
+        \end{align*}
+
+    to:
+        \begin{align*}
+          E[y_{t,DT_{t}=0}] &= E[\beta_0 + \beta_1 t + \beta_2 (t - T_{B}) + U_{2t}]    \tag*{where $E[U_{2t}]=0$} \\ 
+                            &= \beta_0 + \beta_1 t + \beta_2 (t - T_{B}) \\ 
+        \end{align*}
+
+    giving the change:
+        \begin{align*}
+          E[y_{t,DT_{t}=(t-T_{B})}] - E(y_{t,DI_{t}=0}) &= \beta_2 (t - T_{B})
+        \end{align*}
+    Or, the difference in expected $y_t$ is the estimated time-dependant linear trend with coefficent $\beta_2$. Unlike model ($i$), model ($ii$) is time-variant with a time-dependant structural break: the pre-break trend is dependant on time, and this `relationship' with time changes significantly after the break. It could represent high- and increasing-growth ($\beta_{1}>0$) in university student numbers at Australian institutions after a the introduction of the demand-driven system at time $T_B$. This is, very roughly, shown in Figure \ref{chart11}.\footnote{One would have to assume monthly data-collection on enrolments and a lack of a semester-based enrolment system for this figure to match the example well. Strong imagination required.}
+
+
+<<q11, echo=FALSE, include=FALSE>>=
+    
+# Generating random variables for models (i) and (ii)
+  set.seed(19)
+  periods <-  200
+  tb      <-  periods/2 # break is half-way through the timeframe
+  a0      <-  1.000 
+  a1      <- -0.500
+  b0      <-  2.000
+  b1      <-  0.005
+  b2      <-  0.010
+    
+    # Model (i) and (ii)
+    model <- as_tibble(data.frame(period = seq(1,periods,1),
+                                  u = rnorm(periods, mean = 0, sd = 0.2))) %>% 
+              mutate(modeli   = if_else(period <= tb,
+                                        a0 + a1*0 + u,
+                                        a0 + a1*1 + u),
+                     modelii  = if_else(period <= tb,
+                                        b0 + b1*period + b2*0 + u,
+                                        b0 + b1*period + b2*(period - tb) + u),
+                     tb = if_else(period < tb,
+                                  FALSE, TRUE))
+
+    chart11 <-                 
+    model %>% ggplot(aes(x = period)) + 
+               geom_line(aes(y = modeli), color = col1) +
+               geom_smooth(aes(y = modeli, group = tb), 
+                           color = col2,
+                           method = "lm",
+                           se = FALSE) +
+               annotate("text", 
+                        x=periods/10, 
+                        y=.5*mean(model$modeli), 
+                        label= "bold(Model (i))", 
+                        color = col1, 
+                        parse = TRUE) + 
+
+  
+               geom_line(aes(y = modelii), color = col1light) +
+               geom_smooth(aes(y = modelii, group = tb), 
+                           color = col2dark,
+                           method = "lm",
+                           se = FALSE) +
+               annotate("text", 
+                        x=periods/10, 
+                        y=0.8*max(model$modelii), 
+                        label= "bold(Model (ii))", 
+                        color = col1light, 
+                        parse = TRUE) + 
+      
+               geom_vline(xintercept = tb, linetype = "dashed", color = "grey60", size = .5) +
+               annotate("text", 
+                        x=1.2*tb, 
+                        y=1.7*mean(model$modelii), 
+                        label= "break in series", 
+                        color = "grey60",
+                        parse = FALSE) +
+      
+             xlab("Period") + 
+             ylab("Growth") +
+               theme_minimal()
+
+ggsave("atlas/chart11.pdf", plot = chart11, device = "pdf")
+
+@
+
+
+    \begin{figure}
+    \caption{Models ($i$) and ($ii$)}
+        \includegraphics[width=.8\columnwidth]{atlas/chart11.pdf}
+        \label{chart11} 
+      \wnote{The two models simulated with the same normally distributed errors over 200 time periods. The structural break occurs at t=\Sexpr{tb}. Parameters for model (i): $\alpha_0 = \Sexpr{a0}$ and $\alpha_1 = \Sexpr{a1}$; for model (ii): $\beta_0 = \Sexpr{b0}$, $\beta_1 = \Sexpr{b1}$ and $\beta_2 = \Sexpr{b2}$. Linear trends with breaks are shown for \textcolor{col2}{model (i)} and \textcolor{col2dark}{model (ii)}.}
+    \end{figure}
+
+
+\newpage
+
+\subsection{} %%Question 1.2
+
+    Model A is time-variant with one structural break and can be expressed as
+      \begin{align*}
+        p_{t} = \alpha_0 + \alpha_1 t + \alpha_2 T_{B,1} + U_{1t}
+      \end{align*}
+    Model B \textit{likely} has six structural breaks, denoted in the following general-form model as $T_{B,1}$ through $T_{B,6}$.\footnote{Although it may have seven if there is one at M12; but we'll assume six for the remainder of the question.}
+      \begin{align*}
+        p_{t} = \beta_0 + \beta_1 t &+ \beta_2 T_{B,1}  \\
+                                    &+ \beta_3 T_{B,2} \\
+                                    &+ \beta_4 T_{B,3} \\
+                                    &+ \beta_5 T_{B,4} \\
+                                    &+ \beta_6 T_{B,5} \\
+                                    &+ \beta_7 T_{B,6} \\
+                                    &+ U_{2t}
+      \end{align*}
+    Model B increases the information in (number of variables of) the model, and \textit{necessarily} increases its ``fit'' ($R^2$).\footnote{See \textit{Econometrics 1} for a detailed discussion.} But this is at the cost of degrees of freedom, and will produce an overfitted model. The coefficients of $T_{B,n}$ would the noise of the data rather than any proper relationship with population events. As the number of breaks approaches the number of observations $n \xrightarrow\ N$ we lose the ability to model structural change; it would be like introducing a dummy variable for each period of observation (day, in this case), which would provide a perfect summary of the Yahoo share-price in the past but provide no information of any other trend. The model would fail to be deterministic --- have a clear relationship with time $t$ --- as it is crowded-out by the every-day-break variables.
+
+
+  \newpage  
+\section{Empirical question}
+
+\subsection{}\label{subsec21}
+
+
+<<q21, echo=FALSE, include=FALSE>>=
+
+# Read data
+data <- read_csv("data/asx_volume.csv") %>% 
+        mutate(date = dmy(Dates)) %>% # Convert string-dates to dates
+        select(-Dates) %>%            # Drop string-dates
+        rename(vol = Volume) %>%      # Rename for ease-of-use
+        mutate(lnvol = log(vol))      # Generate log variable for volume
+
+  # It looks like the series is split before/after the max trading day.
+  # Let's create a dummy for before/after:
+  data <- data %>% mutate(after.crash = as.factor(
+                                        if_else(date > "2011-10-31", 
+                                                "2. After Chi-X", 
+                                                "1. Before Chi-X")))
+# Create time-series chart
+chart21 <- data %>% 
+           ggplot(aes(x = date, y = lnvol)) + 
+            geom_line(color = col1, size = 0.3) + 
+            geom_smooth(method = "lm", color = col2, se=FALSE) +
+            scale_x_date(date_breaks = "2 years", labels = date_format("%Y")) + 
+            xlab("") + 
+            ylab("Daily log-volume traded") +
+            theme_minimal() +
+            theme(axis.title.y = element_text(colour = col1, family = "serif"),
+                  axis.title.x=element_blank(),  ## Turning off x axis for panelling with chart21.break
+                  axis.text.x=element_blank(),
+                  axis.ticks.x=element_blank()) +
+            NULL
+
+chart21.break <- data %>% 
+           ggplot(aes(x = date, y = lnvol)) + 
+            geom_line(color = col1light, size = 0.3) + 
+            geom_smooth(aes(group = after.crash), method = "lm", color = col2dark, se=FALSE) +
+            scale_x_date(date_breaks = "2 years", labels = date_format("%Y")) + 
+            xlab("") + 
+            ylab("Daily log-volume traded") +
+            theme_minimal() +
+            theme(axis.title.y = element_text(colour = col1light, family = "serif")) +
+            # facet_grid(~ after.crash, scales = "free_x") +
+            NULL
+
+ggsave("atlas/chart21.pdf", plot = chart21, device = "pdf", width = 20, height = 10, units = "cm")
+ggsave("atlas/chart21_break.pdf", plot = chart21.break, device = "pdf", width = 20, height = 10, units = "cm")
+@
+
+    
+        \begin{figure}[h!]
+        \caption{Daily log-volume of shares traded on the S\&P/ASX 200}
+            \includegraphics[width=.8\columnwidth]{atlas/chart21.pdf}
+            \includegraphics[width=.8\columnwidth]{atlas/chart21_break.pdf}
+            \label{chart21} 
+          \wnote{The linear trend without a break is shown in the first panel in \textcolor{col2}{blue}. The daily log-volume is repeated in the second panel, with a pre- and post-Chi-X trend in \textcolor{col2dark}{dark blue}}
+        \end{figure}
+
+The variable volume \(volume_{t}\) is units of thousands of shares traded daily. The log of volume \(log(volume_{t})\) is plotted against time in Figure \ref{chart21}. The time-series show a deterministic trend of log-volume traded. there is are clear relationships with time. There is strong growth in trading volume between mid-2000 and late-2009. From 2010 there is a `tempering' for 18 months followed by a decrease in trading between mid-2011 and late-2016, the end of the series.\footnote{This decrease is notable given the population increase in Australia --- a positive contributing factor of trading-volume --- over this period. It might be interesting to look at, say, the trend in trading-volume per person.} From the plot, there is a clear relationship between time and log-volume traded.
+
+\newpage
+\subsection{}\label{subsec22}
+A model for log volume is shown in (1) below.
+    \begin{align*} \label{eq22} 
+    \log{vol_t}  = \beta_{0} + \beta_{1} t + \beta_{2} DT_{t} &+ \beta_{3,1} Mon_{t} \tag*{(1)} \\ 
+                                                              &+ \beta_{3,2} Tue_{t} \\
+                                                              &+ \beta_{3,3} Wed_{t} \\
+                                                              &+ \beta_{3,4} Thu_{t} \\
+                                                              &+ \beta_{3,5} Fri_{t} \\
+                                                      &+ U_{t}
+    \end{align*}
+  Model (1) allows for three broad effects: the overall deterministic structure is modelled through $t$; $DT_{t}$ allows for a potential structural break, visually shown in the second panel of Part \ref{subsec21}, after the introduction of the Chi-X trading platform; and day-of-the-week effects are modelled through the dummy variables $Mon$-$Fri$, where $Mon$ takes a value of $1$ if the day is is Monday, $Tue$ for Tuesday, and so on.\footnote{Monday is the day-of-the-week chosen to be excluded due to autocorrelation. Note also that seasonal effects would add to the model, but are excluded for simplicity.} $U_{t}$ is white noise.
+
+
+<<q22, echo=FALSE>>=
+
+# The structural break of Chi-X occured Oct 31, 2011.
+chix <- "2011-10-31"
+
+# Creating variables: TB and day-of-week dummies
+data.dow <- data %>%
+            mutate(summer = month(date) <= 2 | month(date) >= 12,
+                   autumn = month(date) >= 3 & month(date) <= 5 ,
+                   winter = month(date) >= 6 & month(date) <= 8 ,
+                   spring = month(date) >= 9 & month(date) <= 11) %>% 
+            mutate(dow = wday(date) - 1) %>% # Note that wday considers Sun=1, Mon=2, etc, which is tedious. This sets Mon=1, etc. 
+            mutate(mon = dow == 1,
+                   tue = dow == 2,
+                   wed = dow == 3,
+                   thu = dow == 4,
+                   fri = dow == 5
+                   ) %>% 
+            mutate(chix = as_date(chix),
+                   after.chx = if_else(date < chix, "Before Chi-X", "After Chi-X"),
+                   dt        = if_else(date < chix, 0, as.numeric(date - chix)),
+                   t         = seq(1,n(),1))
+
+@
+
+
+\newpage
+\subsection{} \label{subsec23} %% Question 2.3
+
+  Model \label{eq22} was estimated in \texttt{R}, and its results are presented in Table 1.\footnote{Full, reproducable code for this assignment is presented at  (only made public after the due date) }
+
+<<q22model, echo=FALSE>>=
+reg22a <- lm(lnvol ~ t      +
+                     dt     +
+                     tue    +
+                     wed    +
+                     thu    +
+                     fri    ,
+             data=data.dow)
+
+int.co   <- reg22a$coefficients[1]
+trend.co <- reg22a$coefficients[2]
+break.co <- reg22a$coefficients[3]
+tue.co   <- reg22a$coefficients[4]
+  etue.co    <- 100*round(exp(tue.co)-1,4)
+wed.co   <- reg22a$coefficients[5]
+  ewed.co    <- 100*round(exp(wed.co)-1,4)
+thu.co   <- reg22a$coefficients[6]
+  ethu.co    <- 100*round(exp(thu.co)-1,4)
+fri.co   <- reg22a$coefficients[7]
+  efri.co    <- 100*round(exp(fri.co)-1,4)
+
+before.chix.growth <- 100*round(exp(trend.co)-1,5)
+after.chix.growth  <- 100*round(exp(trend.co + break.co)-1,5)
+@
+
+
+%% Table of regression results
+\begin{table}[h!] \centering 
+      \caption{Results of Model (1)} 
+      \label{tab1} 
+      \begin{tabular}{@{\extracolsep{5pt}}lc} 
+          \\[-1.8ex]\hline 
+          \hline \\[-1.8ex] 
+           & \multicolumn{1}{c}{\textit{Dependent variable:}} \\ 
+          \\[-1.8ex] & \multicolumn{1}{c}{$ln(vol)$} \\ 
+          \\[-1.8ex] & (1) \\ 
+          \hline \\[-1.8ex] 
+           t & \Sexpr{round(summary(reg22a)$coefficients[2 , 1],5)}$^{***}$ \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[2 , 2],5)}) \\ 
+           dt & \Sexpr{round(summary(reg22a)$coefficients[3 , 1],5)}$^{***}$  \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[3 , 2],5)})  \\ 
+           tue & \Sexpr{round(summary(reg22a)$coefficients[4 , 1],5)}$^{***}$  \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[4 , 2],5)}) \\ 
+           wed & \Sexpr{round(summary(reg22a)$coefficients[5 , 1],5)}$^{***}$  \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[5 , 2],5)})  \\ 
+           thu & \Sexpr{round(summary(reg22a)$coefficients[6 , 1],5)}$^{***}$  \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[6 , 2],5)})  \\ 
+           fri & \Sexpr{round(summary(reg22a)$coefficients[7 , 1],5)}$^{***}$  \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[7 , 2],5)})  \\ 
+           Constant & \Sexpr{round(summary(reg22a)$coefficients[1 , 1],5)}$^{***}$  \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[1 , 2],5)})  \\ 
+          \hline \\[-1.8ex] 
+          Observations & 4,123  \\ 
+          R$^{2}$ & \Sexpr{round(summary(reg22a)$r.squared,6)}  \\ 
+          Adjusted R$^{2}$ & \Sexpr{round(summary(reg22a)$adj.r.squared,6)} \\ 
+          F Statistic (df = \Sexpr{round(summary(reg22a)$fstatistic[2],0)}; \Sexpr{round(summary(reg22a)$fstatistic[3],0)}) & \Sexpr{round(summary(reg22a)$fstatistic[1],2)}$^{***}$  \\ 
+          \hline 
+          \hline \\[-1.8ex] 
+          \textit{Note:}  & \multicolumn{1}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+      \end{tabular} 
+\end{table} 
+
+
+\subsubsection*{Monday blues}
+\vspace*{-6mm}
+  Monday ($Mon_t$) is evidenty a slow day for trading: at the 5 per cent confidence level there is significantly more trading on all other weekdays. 
+  The model estimates that average trading volume on Mondays is $e^{\Sexpr{round(int.co,4)}}=\Sexpr{round(exp(int.co),2)}$ units traded. Relative to Monday, the trading volume for other weekdays is:
+  \begin{itemize}
+    \item Tuesday:  $(e^{\Sexpr{round(tue.co,4)}}-1)\times 100\%=\Sexpr{etue.co}\%$  higher.
+    \item Wednesday:  $(e^{\Sexpr{round(wed.co,4)}}-1)\times 100\%=\Sexpr{ewed.co}\%$ higher. 
+    \item Thursday:  $(e^{\Sexpr{round(thu.co,4)}}-1)\times 100\%=\Sexpr{ethu.co}\%$  higher.
+    \item Friday:  $(e^{\Sexpr{round(fri.co,4)}}-1)\times 100\%=\Sexpr{efri.co}\%$  higher.
+  \end{itemize}
+
+\subsubsection*{The Chi-X drag}
+\vspace*{-6mm}
+  The volume-traded increased strongly between mid-2000 and 2011 (see Figure \ref{chart21}), and this analysis agrees: before Chi-X was introduced the average growth to trading was $(e^{\Sexpr{round(trend.co,4)}}-1)\times 100\%=\Sexpr{before.chix.growth}\%$ per trading-day. The introduction of Chi-X reversed this growth. Post-Chi-X, the trend in average growth dropped to $(e^{(\Sexpr{round(trend.co,4)}-\Sexpr{abs(round(break.co,4))})}-1)\times 100\%=\Sexpr{after.chix.growth}\%$ per trading-day.\footnote{This is equal to an annualised increase of $\Sexpr{round(abs(1-exp(trend.co)^365)*100,1)}\%$ before Chi-X, and \Sexpr{round(-abs(1-exp(trend.co+break.co)^365)*100,1)}\% after.}
+
+
+\newpage
+\subsection{} \label{subsec24} %% Question 2.4
+<<q23, echo=FALSE>>=
+
+# Plot ACF and PACF charts
+
+    # Set confidence interval
+    ci <- 0.95
+    acf22a  <-  acf(reg22a$residuals, plot = FALSE)
+    pacf22a <- pacf(reg22a$residuals, plot = FALSE)
+    
+    correl22a.data <-  tibble(lag = c(1:36,1:36),
+                              method = c(rep("ACF",36),rep("Partial ACF",36)),
+                              correl = c(acf22a$acf[2:37],pacf22a$acf))
+  
+    correl22a <-  correl22a.data %>% filter(lag <= 20) %>% 
+          ggplot(mapping = aes(x = lag, y = correl)) +
+           geom_hline(aes(yintercept = 1-ci), linetype = "dashed", col = col2) +
+           geom_hline(aes(yintercept = ci-1), linetype = "dashed", col = col2) +
+           geom_segment(mapping = aes(xend = lag, yend = 0)) +
+           xlab("Lag") + 
+           ylab("") +
+           theme_minimal() +
+           theme(axis.title.y = element_text(colour = "black", family = "serif"),
+                 panel.background = element_rect(fill = NA, color = "black")) +
+           facet_wrap("method") +
+           NULL
+      
+ggsave("atlas/chart23correl.pdf", plot = correl22a, device = "pdf", width = 20, height = 10, units = "cm")    
+# Plot residuals
+    reg22a.resid <- bind_cols(
+                      (as_tibble(data.dow$date)      %>% rename(date = value)), 
+                      (as_tibble(data.dow$after.chx) %>% rename(after.chix = value)), 
+                      (as_tibble(reg22a$residuals)   %>% rename(resid = value))
+                       ) 
+    
+    plotresid22a <- reg22a.resid %>% 
+           ggplot(aes(x = date, y = resid)) + 
+            geom_line(color = col1, size = 0.3) + 
+            # geom_smooth(aes(group = after.chix), method = "lm", color = col2, se=FALSE) + ## With broken trend
+            scale_x_date() + 
+            xlab("") + 
+            ylab("Residuals of Model (1)") +
+            theme_light() +
+            theme(axis.title.y = element_text(colour = col1)) +
+            NULL
+
+ggsave("atlas/chart23resid.pdf", plot = plotresid22a, device = "pdf", width = 20, height = 10, units = "cm")  
+
+@
+
+The residuals, alonside the ACF and partial ACF (PACF) of the residuals, for model (1), are plotted in Figure \ref{chart23}. The ACF and PACF are plotted to 20 lags. The ACF decays \textit{reasonably} quickly to the 10$^{th}$ lag before tapering off, indicating that there remain frequent deviations from the trend. This can be an indication of stationarity.\footnote{But this indication will be ignored for this paper.}
+
+The PACF indicates there are significant direct effects up to the fourth lag, with further effects at lags 6, 8 and 11. There is clear evidence of autocorrelation. The first lag effect for the ACF and PACF\footnote{The first lags for ACF and PACF are necessarily the same} is small -- \Sexpr{round(max(correl22a$data[,3]),3)} -- which is an indicator of stationarity.
+
+    \begin{figure}[h!]
+    \caption{Residuals and ACF/Partial ACF for model (1)}
+        \includegraphics[width=.9\columnwidth]{atlas/chart23resid.pdf}
+        \includegraphics[width=.9\columnwidth]{atlas/chart23correl.pdf}
+        \label{chart23} 
+      % \wnote{The linear trend without a break is shown in \textcolor{col2}{blue}}
+    \end{figure}  
+
+\newpage
+\subsection{} \label{subsec25} %%Q2.5
+  
+  <<q25, echo = FALSE >>=
+  nocorr <- summary(reg22a)
+    corr <- summary(reg22a)
+    corr$coefficients <- unclass(coeftest(reg22a, vcov. = NeweyWest))    
+@
+
+
+  Newey-West standard errors can be used to conduct inference in the presence of autocorrelation.\footnote{These require stationarity, which was only suggested in the evidence of section \ref{subsec25}, but will be assumed for the remaining sections.} Newey-West standard errors for model (1) are presented in Table \ref{tab2}, alongside the uncorrected standard errors. 
+
+  \begin{table}[h!] \centering 
+      \caption{Results of Model (1) with uncorrected and Newey-West standard errors} 
+      \label{tab2} 
+      \begin{tabular}{@{\extracolsep{5pt}}lcc} 
+          \\[-1.8ex]\hline 
+          \hline \\[-1.8ex] 
+           & \multicolumn{2}{c}{\textit{Dependent variable:}} \\ 
+          \cline{2-3} 
+          \\[-1.8ex] & \multicolumn{2}{c}{$ln(vol)$} \\ 
+          \\[-1.8ex] & Uncorrected standard errors & Newey-West standard errors \\ 
+          \hline \\[-1.8ex] 
+           t & \Sexpr{round(summary(reg22a)$coefficients[2 , 1],5)}$^{***}$ & \Sexpr{round(summary(reg22a)$coefficients[2 , 1],5)}$^{***}$ \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[2 , 2],5)}) & (\Sexpr{round(corr$coefficients[2 , 2],5)}) \\ 
+            & & \\ 
+           dt & \Sexpr{round(summary(reg22a)$coefficients[3 , 1],5)}$^{***}$ & \Sexpr{round(summary(reg22a)$coefficients[3 , 1],5)}$^{***}$ \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[3 , 2],5)}) & (\Sexpr{round(corr$coefficients[3 , 2],5)}) \\ 
+            & & \\ 
+           tue & \Sexpr{round(summary(reg22a)$coefficients[4 , 1],5)}$^{***}$ & \Sexpr{round(summary(reg22a)$coefficients[4 , 1],5)}$^{***}$ \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[4 , 2],5)}) & (\Sexpr{round(corr$coefficients[4 , 2],5)}) \\ 
+            & & \\ 
+           wed & \Sexpr{round(summary(reg22a)$coefficients[5 , 1],5)}$^{***}$ & \Sexpr{round(summary(reg22a)$coefficients[5 , 1],5)}$^{***}$ \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[5 , 2],5)}) & (\Sexpr{round(corr$coefficients[5 , 2],5)}) \\ 
+            & & \\ 
+           thu & \Sexpr{round(summary(reg22a)$coefficients[6 , 1],5)}$^{***}$ & \Sexpr{round(summary(reg22a)$coefficients[6 , 1],5)}$^{***}$ \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[6 , 2],5)}) & (\Sexpr{round(corr$coefficients[6 , 2],5)}) \\ 
+            & & \\ 
+           fri & \Sexpr{round(summary(reg22a)$coefficients[7 , 1],5)}$^{***}$ & \Sexpr{round(summary(reg22a)$coefficients[7 , 1],5)}$^{***}$ \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[7 , 2],5)}) & (\Sexpr{round(corr$coefficients[7 , 2],5)}) \\ 
+            & & \\ 
+           Constant & \Sexpr{round(summary(reg22a)$coefficients[1 , 1],5)}$^{***}$ & \Sexpr{round(summary(reg22a)$coefficients[1 , 1],5)}$^{***}$ \\ 
+            & (\Sexpr{round(summary(reg22a)$coefficients[1 , 2],5)}) & (\Sexpr{round(corr$coefficients[1 , 2],5)}) \\ 
+            & & \\ 
+          \hline \\[-1.8ex] 
+          \textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+    \end{tabular} 
+  \end{table} 
+
+
+The Newey-West standard errors of coefficients for both $t$ and $DT_{t}$ are greater than the uncorrected standard errors. This reflects the correction for autocorrelation that would otherwise inflate the significance of results. However, even after the correction $t$ and $DT_{t}$ are significant. 
+
+\newpage
+\subsection{} \label{subsec26} %Q26
+The standard errors for days of the week decrease after the model is corrected for autocorrelation. Monday trading volume is \textit{even more} significantly different from all other days (\ie the results from Section \ref{subsec23} hold.) This result says that when we strip away any spurious autocorrelation, the days of the week effects were revealed to be stronger.
+
+\subsection{} \label{subsec27} %%Q27
+  The eveidence presented in Sections 2.1 to 2.6 indicate a long-term effect due on the volume of shares traded on the S\&P/ASX200 after the entrance of a competitor, Chi-X. Section \ref{subsec23} shows that the pre-Chi-X trend was \Sexpr{before.chix.growth}\%, reversing to \Sexpr{after.chix.growth}\% growth per trading day afterwards.
+
+
+
+\end{document}
+
+
+
+
