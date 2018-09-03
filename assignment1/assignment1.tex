@@ -1,54 +1,4 @@
-\documentclass{article}\usepackage[]{graphicx}\usepackage[]{color}
-%% maxwidth is the original width if it is less than linewidth
-%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
-\makeatletter
-\def\maxwidth{ %
-  \ifdim\Gin@nat@width>\linewidth
-    \linewidth
-  \else
-    \Gin@nat@width
-  \fi
-}
-\makeatother
-
-\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
-\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
-\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
-\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
-\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
-\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
-\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
-\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
-\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
-\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
-\let\hlipl\hlkwb
-
-\usepackage{framed}
-\makeatletter
-\newenvironment{kframe}{%
- \def\at@end@of@kframe{}%
- \ifinner\ifhmode%
-  \def\at@end@of@kframe{\end{minipage}}%
-  \begin{minipage}{\columnwidth}%
- \fi\fi%
- \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
- \colorbox{shadecolor}{##1}\hskip-\fboxsep
-     % There is no \\@totalrightmargin, so:
-     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
- \MakeFramed {\advance\hsize-\width
-   \@totalleftmargin\z@ \linewidth\hsize
-   \@setminipage}}%
- {\par\unskip\endMakeFramed%
- \at@end@of@kframe}
-\makeatother
-
-\definecolor{shadecolor}{rgb}{.97, .97, .97}
-\definecolor{messagecolor}{rgb}{0, 0, 0}
-\definecolor{warningcolor}{rgb}{1, 0, 1}
-\definecolor{errorcolor}{rgb}{1, 0, 0}
-\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
-
-\usepackage{alltt}
+\documentclass{article}
 
   % Packages
   %% Setting nice page margins
@@ -89,13 +39,19 @@
 \title{Time Series Analysis and Forecasting (ECOM30004): Assignment 1}
 \date{2018\\ August}
 \author{Will Mackey\\ 790114}
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+
+
+
+
+
+
+\usepackage{Sweave}
 \begin{document}
+\input{assignment1-concordance}
 \maketitle
 
 
 %% R installation
-
 
 
 \section{Conceptual question}
@@ -164,7 +120,6 @@
 
 
 
-
     \begin{figure}
     \caption{Models ($i$) and ($ii$)}
         \includegraphics[width=.8\columnwidth]{atlas/chart11.pdf}
@@ -201,7 +156,6 @@
 
 
 
-
     
         \begin{figure}[h!]
         \caption{Daily log-volume of shares traded on the S\&P/ASX 200}
@@ -229,12 +183,10 @@ A model for log volume is shown in (1) below.
 
 
 
-
 \newpage
 \subsection{} \label{subsec23} %% Question 2.3
 
   Model \label{eq22} was estimated in \texttt{R}, and its results are presented in Table 1.\footnote{Full, reproducable code for this assignment can be found at  \url{www.github.com/wfmackey/timeseries-coursework/tree/master/assignment1} (only made public after the due date).}
-
 
 
 
@@ -294,7 +246,6 @@ A model for log volume is shown in (1) below.
 \newpage
 \subsection{} \label{subsec24} %% Question 2.4
 
-
 The residuals, alonside the ACF and partial ACF (PACF) of the residuals, for model (1), are plotted in Figure \ref{chart23}. The ACF and PACF are plotted to 20 lags. The ACF decays \textit{reasonably} quickly to the 10$^{th}$ lag before tapering off, indicating that there remain frequent deviations from the trend. This can be an indication of stationarity.\footnote{But this indication will be ignored for this paper.}
 
 The PACF indicates there are significant direct effects up to the fourth lag, with further effects at lags 6, 8 and 11. There is clear evidence of autocorrelation. The first lag effect for the ACF and PACF\footnote{The first lags for ACF and PACF are necessarily the same} is small -- 0.625 -- which is an indicator of stationarity.
@@ -310,62 +261,7 @@ The PACF indicates there are significant direct effects up to the fourth lag, wi
 \newpage
 \subsection{} \label{subsec25} %%Q2.5
   
-
-
-
-  Newey-West standard errors can be used to conduct inference in the presence of autocorrelation.\footnote{These require stationarity, which was only suggested in the evidence of section \ref{subsec25}, but will be assumed for the remaining sections.} Newey-West standard errors for model (1) are presented in Table \ref{tab2}, alongside the uncorrected standard errors. 
-
-  \begin{table}[h!] \centering 
-      \caption{Results of Model (1) with uncorrected and Newey-West standard errors} 
-      \label{tab2} 
-      \begin{tabular}{@{\extracolsep{5pt}}lcc} 
-          \\[-1.8ex]\hline 
-          \hline \\[-1.8ex] 
-           & \multicolumn{2}{c}{\textit{Dependent variable:}} \\ 
-          \cline{2-3} 
-          \\[-1.8ex] & \multicolumn{2}{c}{$ln(vol)$} \\ 
-          \\[-1.8ex] & Uncorrected standard errors & Newey-West standard errors \\ 
-          \hline \\[-1.8ex] 
-           t & 0.00046$^{***}$ & 0.00046$^{***}$ \\ 
-            & (0.00001) & (0.00002) \\ 
-            & & \\ 
-           dt & -0.00075$^{***}$ & -0.00075$^{***}$ \\ 
-            & (0.00001) & (0.00005) \\ 
-            & & \\ 
-           tue & 0.1639$^{***}$ & 0.1639$^{***}$ \\ 
-            & (0.01435) & (0.00956) \\ 
-            & & \\ 
-           wed & 0.20808$^{***}$ & 0.20808$^{***}$ \\ 
-            & (0.01434) & (0.01141) \\ 
-            & & \\ 
-           thu & 0.2514$^{***}$ & 0.2514$^{***}$ \\ 
-            & (0.01435) & (0.01081) \\ 
-            & & \\ 
-           fri & 0.21555$^{***}$ & 0.21555$^{***}$ \\ 
-            & (0.01442) & (0.0108) \\ 
-            & & \\ 
-           Constant & 12.31408$^{***}$ & 12.31408$^{***}$ \\ 
-            & (0.01386) & (0.02816) \\ 
-            & & \\ 
-          \hline \\[-1.8ex] 
-          \textit{Note:}  & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
-    \end{tabular} 
-  \end{table} 
-
-
-The Newey-West standard errors of coefficients for both $t$ and $DT_{t}$ are greater than the uncorrected standard errors. This reflects the correction for autocorrelation that would otherwise inflate the significance of results. However, even after the correction $t$ and $DT_{t}$ are significant. 
-
-\newpage
-\subsection{} \label{subsec26} %Q26
-The standard errors for days of the week decrease after the model is corrected for autocorrelation. Monday trading volume is \textit{even more} significantly different from all other days (\ie the results from Section \ref{subsec23} hold.) This result says that when we strip away any spurious autocorrelation, the days of the week effects were revealed to be stronger.
-
-\subsection{} \label{subsec27} %%Q27
-  The eveidence presented in Sections 2.1 to 2.6 indicate a long-term effect due on the volume of shares traded on the S\&P/ASX200 after the entrance of a competitor, Chi-X. Section \ref{subsec23} shows that the pre-Chi-X trend was 0.046\%, reversing to -0.028\% growth per trading day afterwards.
-
-
-
-\end{document}
-
-
-
-
+  <<q25, echo = FALSE >>=
+  nocorr <- summary(reg22a)
+    corr <- summary(reg22a)
+    corr$coefficients <- unclass(coeftest(reg22a, vcov. = NeweyWest))    
